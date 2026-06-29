@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preencha seu Currículo</title>
+<link rel="icon" type="image/ico" href="logo.ico">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --ui-bg:#0f172a;
+  --ui-surface:#1e293b;
+  --ui-border:#334155;
+  --ui-text:#f1f5f9;
+  --ui-muted:#94a3b8;
+  --ui-accent:#6366f1;
+  --ui-accent2:#818cf8;
+  --ui-input:#0f172a;
+  --radius:12px;
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--ui-bg);
+  color:var(--ui-text);
+  min-height:100vh;
+  display:grid;
+  grid-template-rows:auto 1fr;
+}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--ui-surface);
+  border-bottom:1px solid var(--ui-border);
+  padding:0 20px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:200;
+}
+.topbar-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;
+  font-size:17px;
+  letter-spacing:-.3px;
+}
+.topbar-brand span{
+  background:linear-gradient(135deg,#6366f1,#a78bfa);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.topbar-badge{
+  font-size:10px;
+  background:#6366f1;
+  color:#fff;
+  padding:2px 7px;
+  border-radius:20px;
+  font-weight:600;
+  letter-spacing:.5px;
+}
+.topbar-actions{ display:flex; align-items:center; gap:8px; }
+.btn-pdf{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 18px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:opacity .2s,transform .1s;
+  font-family:'Inter',sans-serif;
+}
+.btn-pdf:hover{opacity:.9;transform:translateY(-1px)}
+.btn-pdf:active{transform:translateY(0)}
+.btn-pdf svg{width:15px;height:15px}
+
+.btn-export{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:8px 14px;
+  background:transparent;
+  color:#94a3b8;
+  border:1px solid #475569;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:border-color .2s,color .2s,background .2s;
+  font-family:'Inter',sans-serif;
+  text-decoration:none;
+  white-space:nowrap;
+}
+.btn-export:hover{border-color:#818cf8;color:#c7d2fe;background:rgba(99,102,241,.08)}
+.btn-import-label{cursor:pointer}
+@media(max-width:640px){
+  .btn-export-label{display:none}
+  .btn-export{padding:8px 10px}
+}
+
+/* ── MAIN LAYOUT PC: sidebar + preview lado a lado ── */
+.app{
+  display:grid;
+  grid-template-columns:370px 1fr;
+  height:calc(100vh - 56px);
+  overflow:hidden;
+}
+
+/* ── SIDEBAR PANEL ── */
+.panel{
+  background:var(--ui-surface);
+  border-right:1px solid var(--ui-border);
+  overflow-y:auto;
+  padding:20px 18px 32px;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+.panel::-webkit-scrollbar{width:4px}
+.panel::-webkit-scrollbar-track{background:transparent}
+.panel::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+
+.section-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.9px;
+  text-transform:uppercase;
+  color:var(--ui-muted);
+  margin-top:18px;
+  margin-bottom:4px;
+  padding-left:2px;
+}
+.section-label:first-child{margin-top:0}
+
+label{
+  font-size:12px;
+  font-weight:500;
+  color:var(--ui-muted);
+  display:block;
+  margin-bottom:3px;
+  margin-top:9px;
+}
+input[type=text],input[type=email],input[type=tel],textarea,select{
+  width:100%;
+  padding:9px 13px;
+  background:var(--ui-input);
+  border:1px solid var(--ui-border);
+  border-radius:var(--radius);
+  color:var(--ui-text);
+  font-size:13px;
+  font-family:'Inter',sans-serif;
+  outline:none;
+  transition:border-color .2s;
+}
+input[type=text]:focus,textarea:focus{
+  border-color:var(--ui-accent);
+  box-shadow:0 0 0 3px rgba(99,102,241,.15);
+}
+textarea{min-height:78px;resize:vertical;line-height:1.5}
+
+.file-label{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 13px;
+  background:var(--ui-input);
+  border:1px dashed var(--ui-border);
+  border-radius:var(--radius);
+  cursor:pointer;
+  font-size:13px;
+  color:var(--ui-muted);
+  transition:border-color .2s,color .2s;
+}
+.file-label:hover{border-color:var(--ui-accent);color:var(--ui-text)}
+.file-label svg{width:17px;height:17px;opacity:.6;flex-shrink:0}
+input[type=file]{display:none}
+
+/* THEME PICKER */
+.theme-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:7px;
+  margin-top:4px;
+}
+.theme-chip{
+  aspect-ratio:1;
+  border-radius:9px;
+  cursor:pointer;
+  border:3px solid transparent;
+  transition:transform .15s,border-color .15s;
+  overflow:hidden;
+}
+.theme-chip:hover{transform:scale(1.08)}
+.theme-chip.active{border-color:#fff;box-shadow:0 0 0 2px #6366f1}
+.theme-chip-inner{width:100%;height:100%;display:grid;grid-template-rows:40% 60%}
+.theme-chip-top{width:100%;height:100%}
+.theme-chip-bottom{background:#f3f4f6;width:100%}
+.theme-name{font-size:10px;color:var(--ui-muted);text-align:center;margin-top:3px}
+
+/* ── PREVIEW AREA (PC: coluna direita, full height) ── */
+.preview-area{
+  background:#cbd5e1;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:28px 24px 40px;
+  gap:10px;
+}
+.preview-area::-webkit-scrollbar{width:6px}
+.preview-area::-webkit-scrollbar-track{background:transparent}
+.preview-area::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:4px}
+.preview-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.9px;
+  text-transform:uppercase;
+  color:#64748b;
+  align-self:flex-start;
+}
+.resume-scaler{
+  transform-origin:top center;
+}
+
+/* ── RESUME BASE ── */
+#resume{
+  width:794px;
+  min-height:1123px;
+  background:#fff;
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+  border-radius:3px;
+  flex-shrink:0;
+}
+
+/* ════ TEMAS ════ */
+.theme-indigo #resume-header{background:linear-gradient(135deg,#1e3a8a 0%,#4338ca 100%);color:#fff;padding:36px 40px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.theme-indigo .r-name{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
+.theme-indigo .r-cargo{font-size:15px;opacity:.85;margin-top:6px;font-weight:400}
+.theme-indigo .r-contato{font-size:13px;opacity:.75;margin-top:10px;line-height:1.7}
+.theme-indigo #resume-body{display:grid;grid-template-columns:230px 1fr}
+.theme-indigo .r-sidebar{background:#f0f4ff;padding:28px 24px}
+.theme-indigo .r-main{padding:28px 32px}
+.theme-indigo .r-sec-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#3730a3;border-bottom:2px solid #c7d2fe;padding-bottom:6px;margin-bottom:12px}
+.theme-indigo .r-sec{margin-bottom:22px}
+.theme-indigo .r-sec p{font-size:13px;line-height:1.65;color:#374151;white-space:pre-line}
+
+.theme-emerald #resume-header{background:linear-gradient(135deg,#064e3b 0%,#059669 100%);color:#fff;padding:36px 40px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.theme-emerald .r-name{font-family:'Playfair Display',serif;font-size:34px;font-weight:800;line-height:1.1}
+.theme-emerald .r-cargo{font-size:15px;opacity:.85;margin-top:6px;font-style:italic}
+.theme-emerald .r-contato{font-size:13px;opacity:.75;margin-top:10px;line-height:1.7}
+.theme-emerald #resume-body{display:grid;grid-template-columns:230px 1fr}
+.theme-emerald .r-sidebar{background:#ecfdf5;padding:28px 24px}
+.theme-emerald .r-main{padding:28px 32px}
+.theme-emerald .r-sec-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:#065f46;border-bottom:2px solid #6ee7b7;padding-bottom:6px;margin-bottom:12px}
+.theme-emerald .r-sec{margin-bottom:22px}
+.theme-emerald .r-sec p{font-size:13px;line-height:1.65;color:#374151;white-space:pre-line}
+
+.theme-violet #resume-header{background:linear-gradient(135deg,#4c1d95 0%,#7c3aed 100%);color:#fff;padding:36px 40px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.theme-violet .r-name{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;letter-spacing:-.5px}
+.theme-violet .r-cargo{display:inline-block;margin-top:8px;background:rgba(255,255,255,.2);padding:4px 14px;border-radius:20px;font-size:13px;font-weight:500}
+.theme-violet .r-contato{font-size:13px;opacity:.75;margin-top:10px;line-height:1.7}
+.theme-violet #resume-body{display:grid;grid-template-columns:230px 1fr}
+.theme-violet .r-sidebar{background:#faf5ff;padding:28px 24px}
+.theme-violet .r-main{padding:28px 32px}
+.theme-violet .r-sec-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7c3aed;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.theme-violet .r-sec-title::before{content:'';display:block;width:16px;height:3px;background:#7c3aed;border-radius:2px}
+.theme-violet .r-sec{margin-bottom:22px}
+.theme-violet .r-sec p{font-size:13px;line-height:1.65;color:#374151;white-space:pre-line}
+
+.theme-dark #resume-header{background:linear-gradient(135deg,#000 0%,#1f2937 100%);color:#fff;padding:36px 40px;display:flex;justify-content:space-between;align-items:center;gap:20px;position:relative}
+.theme-dark #resume-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f59e0b,#ef4444,#8b5cf6)}
+.theme-dark .r-name{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;letter-spacing:-.5px}
+.theme-dark .r-cargo{font-size:14px;color:#f59e0b;margin-top:6px;font-weight:500;letter-spacing:.5px}
+.theme-dark .r-contato{font-size:13px;opacity:.6;margin-top:10px;line-height:1.7}
+.theme-dark #resume-body{display:grid;grid-template-columns:230px 1fr}
+.theme-dark .r-sidebar{background:#111827;padding:28px 24px}
+.theme-dark .r-sidebar .r-sec-title{color:#f59e0b;border-bottom-color:#374151}
+.theme-dark .r-sidebar .r-sec p{color:#d1d5db}
+.theme-dark .r-main{padding:28px 32px;background:#fff}
+.theme-dark .r-sec-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#111;border-bottom:2px solid #e5e7eb;padding-bottom:6px;margin-bottom:12px}
+.theme-dark .r-sec{margin-bottom:22px}
+.theme-dark .r-sec p{font-size:13px;line-height:1.65;color:#374151;white-space:pre-line}
+
+.theme-terra #resume-header{background:#1a1a1a;color:#fff;padding:36px 40px;display:flex;justify-content:space-between;align-items:center;gap:20px;border-left:8px solid #b45309}
+.theme-terra .r-name{font-family:'Lora',serif;font-size:32px;font-weight:600;line-height:1.1}
+.theme-terra .r-cargo{font-size:14px;color:#fbbf24;margin-top:6px;letter-spacing:.3px}
+.theme-terra .r-contato{font-size:13px;opacity:.6;margin-top:10px;line-height:1.7}
+.theme-terra #resume-body{display:grid;grid-template-columns:230px 1fr}
+.theme-terra .r-sidebar{background:#fef3c7;padding:28px 24px;border-right:1px solid #fde68a}
+.theme-terra .r-main{padding:28px 32px}
+.theme-terra .r-sec-title{font-family:'Lora',serif;font-size:14px;font-weight:600;color:#92400e;border-bottom:2px solid #fbbf24;padding-bottom:6px;margin-bottom:12px}
+.theme-terra .r-sec{margin-bottom:22px}
+.theme-terra .r-sec p{font-size:13px;line-height:1.65;color:#374151;white-space:pre-line}
+
+/* ── SHARED RESUME ELEMENTS ── */
+.r-photo{width:110px;height:145px;border-radius:10px;object-fit:cover;border:3px solid rgba(255,255,255,.35);flex-shrink:0;display:none}
+.r-photo.visible{display:block}
+
+/* ── TIP BOX ── */
+.tip-box{
+  background:rgba(99,102,241,.1);
+  border:1px solid rgba(99,102,241,.2);
+  border-radius:10px;
+  padding:10px 13px;
+  font-size:12px;
+  color:#a5b4fc;
+  line-height:1.5;
+  margin-top:6px;
+}
+.tip-box b{color:#c7d2fe}
+
+/* ══════════════════════════════
+   MODAL DE RECORTE DE FOTO
+══════════════════════════════ */
+.crop-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.8);
+  backdrop-filter:blur(6px);
+  z-index:1100;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s;
+}
+.crop-overlay.open{ opacity:1; pointer-events:all; }
+.crop-box{
+  background:#1e293b;
+  border:1px solid #334155;
+  border-radius:18px;
+  padding:24px;
+  width:min(460px,95vw);
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  box-shadow:0 32px 80px rgba(0,0,0,.6);
+  transform:scale(.96);
+  transition:transform .2s;
+}
+.crop-overlay.open .crop-box{ transform:scale(1); }
+.crop-title{
+  font-size:15px;font-weight:700;color:#f1f5f9;
+  display:flex;align-items:center;gap:9px;
+}
+.crop-title svg{ width:18px;height:18px;stroke:#6366f1;flex-shrink:0 }
+.crop-viewport{
+  position:relative;
+  width:100%;
+  aspect-ratio:1/1;
+  background:#0f172a;
+  border-radius:12px;
+  overflow:hidden;
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+}
+.crop-viewport:active{ cursor:grabbing; }
+.crop-img{
+  position:absolute;
+  transform-origin:0 0;
+  pointer-events:none;
+  will-change:transform;
+}
+.crop-frame{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:56%;
+  aspect-ratio:3/4;
+  border:2px solid rgba(255,255,255,.95);
+  border-radius:6px;
+  box-shadow:0 0 0 9999px rgba(0,0,0,.52);
+  pointer-events:none;
+}
+.crop-controls{ display:flex;flex-direction:column;gap:8px; }
+.crop-slider-row{
+  display:flex;align-items:center;gap:10px;
+  font-size:12px;color:#94a3b8;
+}
+.crop-slider-row svg{ width:15px;height:15px;flex-shrink:0;opacity:.7 }
+input[type=range].crop-slider{
+  flex:1;height:4px;accent-color:#6366f1;
+  border:none;border-radius:0;padding:0;background:transparent;cursor:pointer;
+}
+.crop-hint{ font-size:11px;color:#64748b;text-align:center;line-height:1.5; }
+.crop-actions{ display:flex;gap:10px; }
+.btn-crop-cancel{
+  flex:1;padding:10px;border-radius:10px;
+  background:transparent;border:1px solid #475569;
+  color:#94a3b8;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:border-color .2s,color .2s;
+}
+.btn-crop-cancel:hover{ border-color:#94a3b8;color:#f1f5f9 }
+.btn-crop-confirm{
+  flex:1;padding:10px;border-radius:10px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;
+  color:#fff;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:opacity .2s;
+}
+.btn-crop-confirm:hover{ opacity:.88 }
+
+/* ══════════════════════════════
+   BOTÃO FLUTUANTE (FAB) MOBILE
+══════════════════════════════ */
+.fab-preview{
+  display:none; /* oculto no PC */
+}
+@media(max-width:768px){
+  .fab-preview{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    position:fixed;
+    bottom:24px;
+    right:20px;
+    z-index:500;
+    background:linear-gradient(135deg,#6366f1,#8b5cf6);
+    color:#fff;
+    border:none;
+    border-radius:28px;
+    padding:13px 20px;
+    font-size:14px;
+    font-weight:700;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    box-shadow:0 8px 24px rgba(99,102,241,.5);
+    transition:transform .15s,box-shadow .15s;
+  }
+  .fab-preview:active{ transform:scale(.95); }
+  .fab-preview svg{ width:18px;height:18px;flex-shrink:0 }
+}
+
+/* ══════════════════════════════
+   MODAL PREVIEW MOBILE
+══════════════════════════════ */
+.mobile-preview-overlay{
+  display:none;
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(5px);
+  z-index:900;
+  align-items:flex-end;
+  justify-content:center;
+}
+.mobile-preview-overlay.open{ display:flex; }
+.mobile-preview-box{
+  background:#1e293b;
+  border-radius:20px 20px 0 0;
+  width:100%;
+  max-height:90vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  animation:slideUp .25s ease;
+}
+@keyframes slideUp{
+  from{transform:translateY(100%)}
+  to{transform:translateY(0)}
+}
+.mobile-preview-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 18px 10px;
+  border-bottom:1px solid #334155;
+  flex-shrink:0;
+}
+.mobile-preview-scroll{
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:16px;
+  flex:1;
+  -webkit-overflow-scrolling:touch;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+/* ── AUTOSAVE dentro do brand ── */
+.topbar-brand .autosave-badge{
+  margin-left:6px;
+}
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size:11px;
+  color:#64748b;
+  padding:3px 10px;
+  background:rgba(0,0,0,.25);
+  border-radius:20px;
+  transition:color .4s;
+}
+.autosave-badge.saved{ color:#4ade80; }
+.autosave-badge .dot{ width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0 }
+
+/* ══════════════════════════════
+   MODAL DE CONFIRMAÇÃO
+══════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.65);
+  backdrop-filter:blur(4px);
+  z-index:1000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s;
+}
+.modal-overlay.open{
+  opacity:1;
+  pointer-events:all;
+}
+.modal-box{
+  background:#1e293b;
+  border:1px solid #334155;
+  border-radius:16px;
+  padding:28px 28px 24px;
+  width:min(380px,90vw);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  transform:translateY(10px) scale(.97);
+  transition:transform .2s;
+  box-shadow:0 24px 60px rgba(0,0,0,.5);
+}
+.modal-overlay.open .modal-box{transform:translateY(0) scale(1)}
+.modal-icon{
+  width:48px;height:48px;
+  border-radius:50%;
+  background:rgba(239,68,68,.15);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:2px;
+}
+.modal-icon svg{width:24px;height:24px;stroke:#f87171}
+.modal-title{font-size:16px;font-weight:700;color:#f1f5f9}
+.modal-desc{font-size:13px;color:#94a3b8;line-height:1.6}
+.modal-actions{display:flex;gap:10px;margin-top:4px}
+.btn-modal-cancel{
+  flex:1;padding:10px;border-radius:10px;
+  background:transparent;border:1px solid #475569;
+  color:#94a3b8;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:border-color .2s,color .2s;
+}
+.btn-modal-cancel:hover{border-color:#94a3b8;color:#f1f5f9}
+/* ══ TOAST ══ */
+.toast{
+  position:fixed;
+  bottom:28px;
+  left:50%;
+  transform:translateX(-50%) translateY(16px);
+  background:#16a34a;
+  color:#fff;
+  padding:11px 20px;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:600;
+  font-family:'Inter',sans-serif;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  box-shadow:0 8px 24px rgba(22,163,74,.4);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s,transform .25s;
+  z-index:2000;
+  white-space:nowrap;
+}
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+.toast svg{width:16px;height:16px;flex-shrink:0}
+
+.btn-modal-confirm{
+  flex:1;padding:10px;border-radius:10px;
+  background:#ef4444;border:none;
+  color:#fff;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:background .2s;
+}
+.btn-modal-confirm:hover{background:#dc2626}
+
+/* ══════════════════════════════
+   IMPORT SPINNER
+══════════════════════════════ */
+@keyframes spin{to{transform:rotate(360deg)}}
+.import-spinner{
+  display:inline-block;
+  width:12px;height:12px;
+  border:2px solid rgba(99,102,241,.3);
+  border-top-color:#6366f1;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  vertical-align:middle;
+  margin-right:4px;
+}
+
+/* ══════════════════════════════
+   MOBILE: tudo empilhado
+══════════════════════════════ */
+@media(max-width:768px){
+  body{ grid-template-rows:auto 1fr; }
+
+  .app{
+    display:flex;
+    flex-direction:column;
+    height:auto;
+    overflow:visible;
+  }
+
+  .panel{
+    border-right:none;
+    border-bottom:none;
+    overflow-y:visible;
+    height:auto;
+    padding-bottom:100px; /* espaço para o FAB não cobrir último campo */
+  }
+
+  /* No mobile o preview fixo fica oculto — usuário usa o FAB */
+  .preview-area{ display:none; }
+
+  /* Chips de tema menores no mobile */
+  .theme-grid{ gap:5px; }
+  .theme-chip{ max-height:52px; border-radius:7px; border-width:2px; }
+  .theme-name{ font-size:9px; }
+
+  .topbar-brand > span:first-of-type{ font-size:14px }
+  .topbar-badge{ display:none }
+}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+  <span id="toastMsg">Dados importados com sucesso!</span>
+</div>
+
+<!-- MODAL RECORTE DE FOTO -->
+<div class="crop-overlay" id="cropOverlay">
+  <div class="crop-box">
+    <div class="crop-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/>
+      </svg>
+      Ajustar foto
+    </div>
+    <div class="crop-viewport" id="cropViewport">
+      <img class="crop-img" id="cropImg" src="" alt="">
+      <div class="crop-frame" id="cropFrame"></div>
+    </div>
+    <div class="crop-controls">
+      <div class="crop-slider-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        <input type="range" class="crop-slider" id="cropZoom" min="0.1" max="3" step="0.01" value="1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+      </div>
+    </div>
+    <div class="crop-hint">Arraste para reposicionar · Use o slider para dar zoom · Moldura 3×4</div>
+    <div class="crop-actions">
+      <button class="btn-crop-cancel" onclick="fecharCrop()">Cancelar</button>
+      <button class="btn-crop-confirm" onclick="confirmarCrop()">Usar esta foto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LIMPAR DADOS -->
+<div class="modal-overlay" id="modalLimpar">
+  <div class="modal-box">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+      </svg>
+    </div>
+    <div class="modal-title">Limpar todos os dados?</div>
+    <div class="modal-desc">Esta ação irá apagar permanentemente nome, cargo, contato, foto e todos os campos do currículo. <b>Não é possível desfazer.</b></div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-modal-confirm" onclick="confirmarLimpar()">Sim, limpar tudo</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/>
+      <line x1="16" y1="17" x2="8" y2="17"/>
+    </svg>
+    <span>Meu Currículo</span>
+    <span class="topbar-badge">CLIENTE</span>
+    <div class="autosave-badge" id="autosaveBadge">
+      <span class="dot"></span><span id="autosaveText">Salvo</span>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn-pdf" onclick="enviarWhatsApp()" style="background:linear-gradient(135deg,#25d366,#128c7e)">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.12.555 4.112 1.528 5.843L.057 23.447a.5.5 0 0 0 .496.553h.054l5.696-1.49A11.938 11.938 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.877 9.877 0 0 1-5.033-1.377l-.36-.214-3.732.977.998-3.645-.235-.374A9.867 9.867 0 0 1 2.1 12C2.1 6.533 6.533 2.1 12 2.1S21.9 6.533 21.9 12 17.467 21.9 12 21.9z"/>
+      </svg>
+      Enviar
+    </button>
+  </div>
+</header>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- PANEL (campos) -->
+  <aside class="panel">
+
+    <div class="section-label">Dados Pessoais</div>
+    <label>Nome completo</label>
+    <input type="text" id="nome" placeholder="Ex: João da Silva Santos">
+    <label>Cargo desejado</label>
+    <input type="text" id="cargo" placeholder="Ex: Assistente Administrativo">
+    <label>Contato (telefone | e-mail | cidade)</label>
+    <input type="text" id="contato" placeholder="(84) 99999-9999 | email@email.com | Natal-RN">
+
+    <div class="section-label">Conteúdo</div>
+    <label>Resumo profissional</label>
+    <textarea id="resumo" placeholder="Profissional com X anos de experiência em… Buscando oportunidade para…"></textarea>
+    <label>Experiência profissional</label>
+    <textarea id="experiencia" placeholder="Empresa Alfa — Vendedor — Jan/2021 a Dez/2023&#10;• Aumento de 30% nas vendas&#10;• Atendimento a carteira de 200 clientes" style="min-height:110px"></textarea>
+    <label>Formação acadêmica</label>
+    <textarea id="formacao" placeholder="Administração — UFRN — 2019&#10;Ensino Médio — Escola XYZ — 2016"></textarea>
+    <label>Cursos e certificações</label>
+    <textarea id="cursos" placeholder="Excel Avançado — 2024&#10;Inglês Intermediário — CNA — 2023"></textarea>
+    <label>Habilidades</label>
+    <textarea id="habilidades" placeholder="Liderança • Organização • Atendimento ao cliente • Pacote Office"></textarea>
+    <label>Idiomas</label>
+    <textarea id="idiomas" placeholder="Português nativo&#10;Inglês intermediário" style="min-height:60px"></textarea>
+
+    <div class="tip-box">
+      <b>Dica:</b> Preencha todos os campos e clique em <b>Enviar</b> para mandar seus dados direto pelo WhatsApp. Seus dados são salvos automaticamente.
+    </div>
+
+    <!-- AÇÕES -->
+    <div class="section-label" style="margin-top:14px">Dados</div>
+    <div style="font-size:12px;color:var(--ui-muted);padding:4px 2px 6px;line-height:1.6">
+      🔒 Dados salvos automaticamente no navegador — mesmo fechando a página, tudo é restaurado.
+    </div>
+    <button onclick="abrirModal()" style="width:100%;padding:9px 14px;background:transparent;border:1px solid #475569;border-radius:10px;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:border-color .2s,color .2s,background .2s;display:flex;align-items:center;justify-content:center;gap:7px"
+      onmouseover="this.style.borderColor='#ef4444';this.style.color='#fca5a5'"
+      onmouseout="this.style.borderColor='#475569';this.style.color='#94a3b8'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+      </svg>
+      Limpar todos os dados
+    </button>
+
+  </aside>
+
+  <!-- PREVIEW PC -->
+  <main class="preview-area" id="previewArea">
+    <div class="preview-label">Visualização em tempo real — A4</div>
+    <div class="resume-scaler" id="resumeScaler">
+      <div class="theme-indigo" id="themeWrapper">
+        <div id="resume">
+          <div id="resume-header">
+            <div>
+              <div class="r-name" id="vNome">Seu Nome Completo</div>
+              <div class="r-cargo" id="vCargo">Cargo Desejado</div>
+              <div class="r-contato" id="vContato">Telefone | E-mail | Cidade</div>
+            </div>
+            <img class="r-photo" id="vFoto" src="" alt="Foto">
+          </div>
+          <div id="resume-body">
+            <div class="r-sidebar">
+              <div class="r-sec" id="secHabilidades">
+                <div class="r-sec-title">Habilidades</div>
+                <p id="vHabilidades"></p>
+              </div>
+              <div class="r-sec" id="secIdiomas">
+                <div class="r-sec-title">Idiomas</div>
+                <p id="vIdiomas"></p>
+              </div>
+              <div class="r-sec" id="secCursos">
+                <div class="r-sec-title">Cursos</div>
+                <p id="vCursos"></p>
+              </div>
+            </div>
+            <div class="r-main">
+              <div class="r-sec" id="secResumo">
+                <div class="r-sec-title">Resumo Profissional</div>
+                <p id="vResumo"></p>
+              </div>
+              <div class="r-sec" id="secExperiencia">
+                <div class="r-sec-title">Experiência Profissional</div>
+                <p id="vExperiencia"></p>
+              </div>
+              <div class="r-sec" id="secFormacao">
+                <div class="r-sec-title">Formação Acadêmica</div>
+                <p id="vFormacao"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   ESTADO GLOBAL
+══════════════════════════════════════════════ */
+let temaAtual = 'indigo';
+let _restaurando = false;
+let _saveTimer = null;
+const LS_KEY = 'curriculo_pro_v1';
+const CAMPOS = ['nome','cargo','contato','resumo','experiencia','formacao','cursos','habilidades','idiomas'];
+
+// Campos de texto e estado global
+
+/* ══════════════════════════════════════════════
+   ESCALA — encaixa A4 na área disponível
+══════════════════════════════════════════════ */
+function ajustarEscala() {
+  const scaler  = document.getElementById('resumeScaler');
+  const preview = document.getElementById('previewArea');
+  const isMobile = window.innerWidth <= 768;
+
+  // largura disponível menos padding (24px cada lado no PC, 12px no mobile)
+  const pad    = isMobile ? 24 : 48;
+  const avail  = preview.clientWidth - pad;
+  const resumeW = 794;
+  const scale  = avail < resumeW ? avail / resumeW : 1;
+
+  scaler.style.transform = `scale(${scale})`;
+  scaler.style.transformOrigin = 'top center';
+
+  // Ajusta a altura do wrapper para não sobrar espaço
+  const resumeH = document.getElementById('resume').offsetHeight;
+  scaler.style.height = scale < 1 ? `${resumeH * scale}px` : '';
+  scaler.style.display = 'block';
+}
+window.addEventListener('resize', ajustarEscala);
+
+/* ══════════════════════════════════════════════
+   TEMA
+══════════════════════════════════════════════ */
+function setTheme(tema, el) {
+  temaAtual = tema;
+  document.getElementById('themeWrapper').className = 'theme-' + tema;
+  document.querySelectorAll('.theme-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (!_restaurando) salvarStorage();
+  setTimeout(ajustarEscala, 50);
+}
+
+/* ══════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════ */
+function val(id) { return document.getElementById(id).value.trim(); }
+function setText(id, text) { document.getElementById(id).innerText = text; }
+
+/* ══════════════════════════════════════════════
+   ATUALIZAR PREVIEW (tempo real)
+══════════════════════════════════════════════ */
+function atualizar() {
+  // Cabeçalho — nome sempre visível, cargo e contato somem se vazios
+  setText('vNome', val('nome') || 'Seu Nome Completo');
+
+  const cargoEl   = document.getElementById('vCargo');
+  const contatoEl = document.getElementById('vContato');
+  const cargoVal  = val('cargo');
+  const contatoVal = val('contato');
+  cargoEl.textContent  = cargoVal;
+  cargoEl.style.display  = cargoVal   ? '' : 'none';
+  contatoEl.textContent  = contatoVal;
+  contatoEl.style.display = contatoVal ? '' : 'none';
+
+  // Seções — aparecem só se preenchidas
+  [
+    ['secResumo',      'vResumo',      'resumo'     ],
+    ['secExperiencia', 'vExperiencia', 'experiencia'],
+    ['secFormacao',    'vFormacao',    'formacao'   ],
+    ['secCursos',      'vCursos',      'cursos'     ],
+    ['secHabilidades', 'vHabilidades', 'habilidades'],
+    ['secIdiomas',     'vIdiomas',     'idiomas'    ],
+  ].forEach(([secId, viewId, inputId]) => {
+    const conteudo = val(inputId);
+    const sec = document.getElementById(secId);
+    if (conteudo) {
+      setText(viewId, conteudo);
+      sec.style.display = 'block';
+    } else {
+      sec.style.display = 'none';
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════
+   AUTOSAVE BADGE
+══════════════════════════════════════════════ */
+function mostrarSalvando() {
+  const badge = document.getElementById('autosaveBadge');
+  const txt   = document.getElementById('autosaveText');
+  badge.classList.remove('saved');
+  txt.textContent = 'Salvando…';
+}
+function mostrarSalvo() {
+  const badge = document.getElementById('autosaveBadge');
+  const txt   = document.getElementById('autosaveText');
+  badge.classList.add('saved');
+  txt.textContent = 'Salvo ✓';
+}
+
+/* ══════════════════════════════════════════════
+   LOCALSTORAGE
+══════════════════════════════════════════════ */
+function salvarStorage() {
+  if (_restaurando) return;
+  mostrarSalvando();
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    const dados = { tema: temaAtual };
+    CAMPOS.forEach(id => { dados[id] = document.getElementById(id).value; });
+    const fotoSrc = document.getElementById('vFoto').src;
+    if (fotoSrc && fotoSrc.startsWith('data:')) dados.foto = fotoSrc;
+    try { localStorage.setItem(LS_KEY, JSON.stringify(dados)); } catch(e) {}
+    mostrarSalvo();
+  }, 400);
+}
+
+function restaurarStorage() {
+  let dados;
+  try { dados = JSON.parse(localStorage.getItem(LS_KEY)); } catch(e) {}
+  if (!dados) { atualizar(); return; }
+
+  _restaurando = true;
+
+  // 1. Campos de texto
+  CAMPOS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && dados[id] !== undefined) el.value = dados[id];
+  });
+
+  // 2. Foto
+  if (dados.foto) {
+    const img = document.getElementById('vFoto');
+    img.src = dados.foto;
+    img.classList.add('visible');
+    document.getElementById('foto-nome').textContent = 'Foto restaurada ✓';
+  }
+
+  // 3. Tema (sem disparar salvarStorage)
+  if (dados.tema) {
+    const chip = document.querySelector(`.theme-chip[data-theme="${dados.tema}"]`);
+    temaAtual = dados.tema;
+    document.getElementById('themeWrapper').className = 'theme-' + dados.tema;
+    document.querySelectorAll('.theme-chip').forEach(c => c.classList.remove('active'));
+    if (chip) chip.classList.add('active');
+  }
+
+  _restaurando = false;
+  atualizar();
+  mostrarSalvo();
+}
+
+/* ══════════════════════════════════════════════
+   MODAL LIMPAR DADOS
+══════════════════════════════════════════════ */
+function abrirModal() {
+  document.getElementById('modalLimpar').classList.add('open');
+}
+function fecharModal() {
+  document.getElementById('modalLimpar').classList.remove('open');
+}
+function confirmarLimpar() {
+  localStorage.removeItem(LS_KEY);
+  location.reload();
+}
+// Fechar clicando fora
+document.getElementById('modalLimpar').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+// Fechar com Esc
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
+
+/* ══════════════════════════════════════════════
+   RECORTE DE FOTO — motor completo
+══════════════════════════════════════════════ */
+const crop = {
+  imgSrc: null,   // base64 da imagem original
+  scale:  1,      // zoom aplicado
+  ox: 0, oy: 0,  // offset de arrasto (px no espaço da imagem escalada)
+  // estado do drag
+  dragging: false,
+  startX: 0, startY: 0,
+  startOx: 0, startOy: 0,
+  // tamanho natural da imagem
+  natW: 0, natH: 0,
+  // tamanho do viewport (quadrado)
+  vpSize: 0,
+};
+
+function carregarFoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => abrirCrop(e.target.result);
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function abrirCrop(src) {
+  crop.imgSrc = src;
+  const overlay = document.getElementById('cropOverlay');
+  const imgEl   = document.getElementById('cropImg');
+
+  imgEl.src = src;
+  imgEl.onload = () => {
+    crop.natW = imgEl.naturalWidth;
+    crop.natH = imgEl.naturalHeight;
+
+    const vp = document.getElementById('cropViewport');
+    crop.vpSize = vp.clientWidth;
+
+    // Escala inicial: a imagem cobre a moldura 3×4 (56% do viewport)
+    const frameW = crop.vpSize * 0.56;
+    const frameH = frameW * (4 / 3);
+    const fitScale = Math.max(frameW / crop.natW, frameH / crop.natH);
+    crop.scale = fitScale;
+    document.getElementById('cropZoom').value = fitScale;
+    document.getElementById('cropZoom').min   = fitScale * 0.5;
+    document.getElementById('cropZoom').max   = fitScale * 4;
+    document.getElementById('cropZoom').step  = fitScale * 0.01;
+
+    // Centraliza a imagem no viewport
+    crop.ox = (crop.vpSize - crop.natW * fitScale) / 2;
+    crop.oy = (crop.vpSize - crop.natH * fitScale) / 2;
+    aplicarTransform();
+    overlay.classList.add('open');
+  };
+}
+
+function fecharCrop() {
+  document.getElementById('cropOverlay').classList.remove('open');
+}
+
+function aplicarTransform() {
+  const img = document.getElementById('cropImg');
+  img.style.width  = crop.natW + 'px';
+  img.style.height = crop.natH + 'px';
+  img.style.transform = `translate(${crop.ox}px, ${crop.oy}px) scale(${crop.scale})`;
+  img.style.transformOrigin = '0 0';
+}
+
+/* Slider de zoom */
+document.getElementById('cropZoom').addEventListener('input', function() {
+  const novoScale = parseFloat(this.value);
+  // Mantém o centro do viewport como ponto de ancoragem
+  const cx = crop.vpSize / 2;
+  const cy = crop.vpSize / 2;
+  const ratio = novoScale / crop.scale;
+  crop.ox = cx - (cx - crop.ox) * ratio;
+  crop.oy = cy - (cy - crop.oy) * ratio;
+  crop.scale = novoScale;
+  aplicarTransform();
+});
+
+/* Arrastar (mouse) */
+const vp = document.getElementById('cropViewport');
+vp.addEventListener('mousedown', e => {
+  crop.dragging = true;
+  crop.startX   = e.clientX;
+  crop.startY   = e.clientY;
+  crop.startOx  = crop.ox;
+  crop.startOy  = crop.oy;
+  e.preventDefault();
+});
+window.addEventListener('mousemove', e => {
+  if (!crop.dragging) return;
+  crop.ox = crop.startOx + (e.clientX - crop.startX);
+  crop.oy = crop.startOy + (e.clientY - crop.startY);
+  aplicarTransform();
+});
+window.addEventListener('mouseup', () => { crop.dragging = false; });
+
+/* Arrastar (touch) */
+vp.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1) return;
+  crop.dragging = true;
+  crop.startX  = e.touches[0].clientX;
+  crop.startY  = e.touches[0].clientY;
+  crop.startOx = crop.ox;
+  crop.startOy = crop.oy;
+  e.preventDefault();
+}, { passive: false });
+window.addEventListener('touchmove', e => {
+  if (!crop.dragging || e.touches.length !== 1) return;
+  crop.ox = crop.startOx + (e.touches[0].clientX - crop.startX);
+  crop.oy = crop.startOy + (e.touches[0].clientY - crop.startY);
+  aplicarTransform();
+}, { passive: false });
+window.addEventListener('touchend', () => { crop.dragging = false; });
+
+/* Pinch-to-zoom no mobile */
+let pinchDist0 = null, pinchScale0 = null;
+vp.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    pinchDist0  = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    pinchScale0 = crop.scale;
+    e.preventDefault();
+  }
+}, { passive: false });
+vp.addEventListener('touchmove', e => {
+  if (e.touches.length === 2 && pinchDist0 !== null) {
+    const dist  = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    const ratio = dist / pinchDist0;
+    const novo  = Math.max(parseFloat(document.getElementById('cropZoom').min),
+                  Math.min(parseFloat(document.getElementById('cropZoom').max), pinchScale0 * ratio));
+    const cx = crop.vpSize / 2, cy = crop.vpSize / 2;
+    const r  = novo / crop.scale;
+    crop.ox  = cx - (cx - crop.ox) * r;
+    crop.oy  = cy - (cy - crop.oy) * r;
+    crop.scale = novo;
+    document.getElementById('cropZoom').value = novo;
+    aplicarTransform();
+    e.preventDefault();
+  }
+}, { passive: false });
+vp.addEventListener('touchend', e => { if (e.touches.length < 2) pinchDist0 = null; });
+
+/* Confirmar — extrai a região da moldura com canvas */
+function confirmarCrop() {
+  const frameEl  = document.getElementById('cropFrame');
+  const vpEl     = document.getElementById('cropViewport');
+  const vpRect   = vpEl.getBoundingClientRect();
+  const frRect   = frameEl.getBoundingClientRect();
+
+  // Posição da moldura relativa ao viewport
+  const fx = frRect.left - vpRect.left;
+  const fy = frRect.top  - vpRect.top;
+  const fw = frRect.width;
+  const fh = frRect.height;
+
+  // Converte para coordenadas da imagem original
+  const srcX = (fx - crop.ox) / crop.scale;
+  const srcY = (fy - crop.oy) / crop.scale;
+  const srcW = fw / crop.scale;
+  const srcH = fh / crop.scale;
+
+  // Render num canvas na proporção 3×4 em alta resolução
+  const OUT_W = 330, OUT_H = 440;
+  const canvas = document.createElement('canvas');
+  canvas.width  = OUT_W;
+  canvas.height = OUT_H;
+  const ctx = canvas.getContext('2d');
+
+  const tmpImg = new Image();
+  tmpImg.onload = () => {
+    ctx.drawImage(tmpImg, srcX, srcY, srcW, srcH, 0, 0, OUT_W, OUT_H);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+    // Aplica no currículo
+    const img  = document.getElementById('vFoto');
+    img.src    = dataUrl;
+    img.classList.add('visible');
+    document.getElementById('foto-nome').textContent = 'Foto recortada ✓';
+    salvarStorage();
+    fecharCrop();
+  };
+  tmpImg.src = crop.imgSrc;
+}
+
+
+/* ══════════════════════════════════════════════
+   IMPORTAR CURRÍCULO (.txt apenas)
+══════════════════════════════════════════════ */
+function importarCurriculo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('import-status');
+  statusEl.innerHTML = '<span class="import-spinner"></span> Lendo arquivo…';
+  const reader = new FileReader();
+  reader.onload = e => {
+    preencherCamposDoTexto(e.target.result);
+    statusEl.textContent = '✓ Arquivo importado com sucesso!';
+    setTimeout(() => { statusEl.textContent = ''; }, 5000);
+  };
+  reader.onerror = () => { statusEl.textContent = '✗ Erro ao ler o arquivo.'; };
+  reader.readAsText(file, 'UTF-8');
+  input.value = '';
+}
+
+/* Analisa texto e preenche campos */
+function preencherCamposDoTexto(texto) {
+  // Normaliza espaços duplicados e quebras de linha extras vindas do PDF
+  texto = texto.replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n');
+  const linhas = texto.split('\n').map(l => l.trim()).filter(Boolean);
+
+  const padroes = {
+    resumo:      /resumo|perfil|objetivo|sobre mim|professional summary|profile/i,
+    experiencia: /experi[eê]ncia|emprego|trabalho|hist[oó]rico|work experience|employment/i,
+    formacao:    /forma[cç][aã]o|educa[cç][aã]o|escolaridade|acad[eê]mico|education/i,
+    cursos:      /cursos?|certifica[cç][oõ]|treinamento|capacita[cç]/i,
+    habilidades: /habilidades?|compet[eê]ncias?|skills?|aptid[oõ]/i,
+    idiomas:     /idiomas?|l[ií]nguas?|languages?/i,
+  };
+
+  // Nome: primeira linha curta que não parece título de seção
+  const primeiraLinha = linhas[0] || '';
+  if (primeiraLinha.length <= 60 && !Object.values(padroes).some(p => p.test(primeiraLinha))) {
+    document.getElementById('nome').value = primeiraLinha;
+  }
+
+  // Contato: e-mail e telefone
+  const reEmail = /[\w.+-]+@[\w.-]+\.[a-z]{2,}/i;
+  const reTel   = /(\(?\d{2}\)?\s?)?[\d\s\-\.]{8,15}/;
+  const contatoPartes = [];
+  linhas.forEach(l => {
+    if (reEmail.test(l)) contatoPartes.push(l.match(reEmail)[0]);
+    else if (reTel.test(l) && l.length < 30) contatoPartes.push(l.match(reTel)[0].trim());
+  });
+  if (contatoPartes.length)
+    document.getElementById('contato').value = [...new Set(contatoPartes)].slice(0,3).join(' | ');
+
+  // Divide em blocos por seção
+  let secaoAtual = null;
+  const blocos = {};
+  linhas.forEach(linha => {
+    const found = Object.entries(padroes).find(([,re]) => re.test(linha) && linha.split(/\s+/).length <= 6);
+    if (found) {
+      secaoAtual = found[0];
+      blocos[secaoAtual] = blocos[secaoAtual] || [];
+    } else if (secaoAtual) {
+      blocos[secaoAtual].push(linha);
+    }
+  });
+
+  // Preenche campos detectados
+  Object.entries({ resumo:'resumo', experiencia:'experiencia', formacao:'formacao', cursos:'cursos', habilidades:'habilidades', idiomas:'idiomas' })
+    .forEach(([chave, id]) => {
+      if (blocos[chave]?.length) document.getElementById(id).value = blocos[chave].join('\n');
+    });
+
+  // Cargo: segunda linha curta, não contato, não seção
+  for (let i = 1; i < Math.min(6, linhas.length); i++) {
+    const l = linhas[i];
+    if (l.length < 60 && !reEmail.test(l) && !reTel.test(l) && !Object.values(padroes).some(p => p.test(l))) {
+      document.getElementById('cargo').value = l;
+      break;
+    }
+  }
+
+  atualizar();
+  salvarStorage();
+}
+
+/* ══════════════════════════════════════════════
+   PREVIEW MOBILE (botão flutuante)
+   — usa html2canvas para prévia idêntica ao PDF
+══════════════════════════════════════════════ */
+function abrirPreviewMobile() {
+  const overlay  = document.getElementById('mobilePreviewOverlay');
+  const scroll   = document.getElementById('mobilePreviewScroll');
+  const resumeEl = document.getElementById('resume');
+  const scaler   = document.getElementById('resumeScaler');
+
+  // Mostra overlay com loading
+  scroll.innerHTML = '<div style="color:#64748b;font-size:13px;padding:40px 0;text-align:center"><span class="import-spinner" style="border-top-color:#6366f1;border-color:rgba(99,102,241,.2)"></span><br><br>Gerando prévia…</div>';
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Salva e remove transformação do scaler para captura limpa
+  const prevTransform = scaler.style.transform;
+  const prevHeight    = scaler.style.height;
+  scaler.style.transform = 'none';
+  scaler.style.height    = '';
+
+  html2canvas(resumeEl, {
+    scale: 1.5,
+    useCORS: true,
+    allowTaint: true,
+    logging: false,
+    backgroundColor: '#ffffff',
+    width: 794,
+    windowWidth: 794
+  }).then(canvas => {
+    // Restaura scaler
+    scaler.style.transform = prevTransform;
+    scaler.style.height    = prevHeight;
+
+    // Exibe a imagem gerada, escalada para caber na tela
+    const img = document.createElement('img');
+    img.src = canvas.toDataURL('image/jpeg', 0.9);
+    img.style.cssText = 'width:100%;height:auto;border-radius:4px;box-shadow:0 8px 32px rgba(0,0,0,.4);display:block';
+
+    scroll.innerHTML = '';
+    scroll.appendChild(img);
+  }).catch(() => {
+    scaler.style.transform = prevTransform;
+    scaler.style.height    = prevHeight;
+    scroll.innerHTML = '<div style="color:#f87171;font-size:13px;padding:40px;text-align:center">Erro ao gerar prévia.</div>';
+  });
+}
+
+function fecharPreviewMobile() {
+  document.getElementById('mobilePreviewOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ══════════════════════════════════════════════
+   ENVIAR PARA WHATSAPP
+══════════════════════════════════════════════ */
+function enviarWhatsApp() {
+  const btn = document.querySelector('.btn-pdf');
+
+  // Coleta todos os campos
+  const nome        = val('nome')        || '(não informado)';
+  const cargo       = val('cargo')       || '(não informado)';
+  const contato     = val('contato')     || '(não informado)';
+  const resumo      = val('resumo')      || '';
+  const experiencia = val('experiencia') || '';
+  const formacao    = val('formacao')    || '';
+  const cursos      = val('cursos')      || '';
+  const habilidades = val('habilidades') || '';
+  const idiomas     = val('idiomas')     || '';
+
+  // Monta a mensagem
+  let msg = `📄 *NOVO CURRÍCULO RECEBIDO*\n\n`;
+  msg += `👤 *Nome:* ${nome}\n`;
+  msg += `💼 *Cargo desejado:* ${cargo}\n`;
+  msg += `📞 *Contato:* ${contato}\n`;
+
+  if (resumo)      msg += `\n📝 *Resumo Profissional:*\n${resumo}`;
+  if (experiencia) msg += `\n\n🏢 *Experiência Profissional:*\n${experiencia}`;
+  if (formacao)    msg += `\n\n🎓 *Formação Acadêmica:*\n${formacao}`;
+  if (cursos)      msg += `\n\n📚 *Cursos e Certificações:*\n${cursos}`;
+  if (habilidades) msg += `\n\n⭐ *Habilidades:*\n${habilidades}`;
+  if (idiomas)     msg += `\n\n🌐 *Idiomas:*\n${idiomas}`;
+
+  msg += `\n\n_Enviado via Formulário de Currículo_`;
+
+  // Número do WhatsApp (código do país + DDD + número, sem espaços ou traços)
+  const numero = '5584994221336';
+  const url = `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
+
+  // Feedback visual no botão
+  const originalHTML = btn.innerHTML;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.12.555 4.112 1.528 5.843L.057 23.447a.5.5 0 0 0 .496.553h.054l5.696-1.49A11.938 11.938 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.877 9.877 0 0 1-5.033-1.377l-.36-.214-3.732.977.998-3.645-.235-.374A9.867 9.867 0 0 1 2.1 12C2.1 6.533 6.533 2.1 12 2.1S21.9 6.533 21.9 12 17.467 21.9 12 21.9z"/></svg> Abrindo…`;
+  setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+
+  window.open(url, '_blank');
+}
+
+
+function gerarPDF() {
+  const btn = document.querySelector('.btn-pdf');
+  btn.innerHTML = '<span class="import-spinner" style="border-top-color:#fff;border-color:rgba(255,255,255,.3)"></span> Gerando…';
+  btn.disabled = true;
+
+  const nomeArquivo = (val('nome') || 'curriculo').toLowerCase()
+    .replace(/\s+/g,'-').normalize('NFD').replace(/[\u0300-\u036f]/g,'') + '.pdf';
+
+  const scaler   = document.getElementById('resumeScaler');
+  const resumeEl = document.getElementById('resume');
+  const prevTransform = scaler.style.transform;
+  const prevHeight    = scaler.style.height;
+  scaler.style.transform = 'none';
+  scaler.style.height    = '';
+
+  html2canvas(resumeEl, {
+    scale: 2, useCORS: true, allowTaint: true,
+    logging: false, backgroundColor: '#ffffff',
+    width: 794, windowWidth: 794
+  }).then(canvas => {
+    scaler.style.transform = prevTransform;
+    scaler.style.height    = prevHeight;
+    const { jsPDF } = window.jspdf;
+    const pdf   = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.97), 'JPEG', 0, 0, pageW, pageH);
+    pdf.save(nomeArquivo);
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Baixar PDF';
+    btn.disabled = false;
+  }).catch(err => {
+    scaler.style.transform = prevTransform;
+    scaler.style.height    = prevHeight;
+    alert('Erro ao gerar PDF. Tente novamente.');
+    btn.innerHTML = 'Baixar PDF';
+    btn.disabled = false;
+    console.error(err);
+  });
+}
+
+/* ══════════════════════════════════════════════
+   EXPORTAR / IMPORTAR JSON
+══════════════════════════════════════════════ */
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function exportarDados() {
+  const dados = { _versao: 1, tema: temaAtual };
+  CAMPOS.forEach(id => { dados[id] = document.getElementById(id).value; });
+  const fotoSrc = document.getElementById('vFoto').src;
+  if (fotoSrc && fotoSrc.startsWith('data:')) dados.foto = fotoSrc;
+
+  const nomeArquivo = ('curriculo-' + (dados.nome || 'sem-nome'))
+    .toLowerCase().trim()
+    .replace(/\s+/g, '-')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\-]/g, '') + '.json';
+
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = nomeArquivo;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importarDados(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    let dados;
+    try { dados = JSON.parse(e.target.result); } catch(err) {
+      alert('Arquivo invalido. Certifique-se de importar um .json exportado por este app.'); return;
+    }
+    if (!dados || typeof dados !== 'object') {
+      alert('Arquivo JSON invalido.'); return;
+    }
+
+    _restaurando = true;
+
+    CAMPOS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && dados[id] !== undefined) el.value = dados[id];
+    });
+
+    if (dados.foto && dados.foto.startsWith('data:')) {
+      const img = document.getElementById('vFoto');
+      img.src   = dados.foto;
+      img.classList.add('visible');
+      document.getElementById('foto-nome').textContent = 'Foto restaurada \u2713';
+    }
+
+    if (dados.tema) {
+      const chip = document.querySelector('.theme-chip[data-theme="' + dados.tema + '"]');
+      temaAtual = dados.tema;
+      document.getElementById('themeWrapper').className = 'theme-' + dados.tema;
+      document.querySelectorAll('.theme-chip').forEach(c => c.classList.remove('active'));
+      if (chip) chip.classList.add('active');
+    }
+
+    _restaurando = false;
+    atualizar();
+    salvarStorage();
+    showToast('Dados importados com sucesso!');
+  };
+  reader.onerror = () => { alert('Erro ao ler o arquivo.'); };
+  reader.readAsText(file, 'UTF-8');
+  input.value = '';
+}
+
+/* ══════════════════════════════════════════════
+   INICIALIZAÇÃO
+══════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  // Restaura dados do localStorage
+  restaurarStorage();
+
+  // Listeners em tempo real
+  CAMPOS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => { atualizar(); salvarStorage(); });
+  });
+
+  // Ajusta escala depois de fontes/layouts renderizarem
+  setTimeout(ajustarEscala, 100);
+  // Segunda passada pra garantir (fontes externas podem demorar)
+  setTimeout(ajustarEscala, 800);
+});
+</script>
+</body>
+</html>
